@@ -1,0 +1,79 @@
+// StockMarket.idl
+// O módulo StockMarket consiste das definições
+// úteis para desenvolvimento de aplicações
+// que lidam com mercado de ações.
+module StockMarket {
+	
+	// Exceção para definir o uso de um símbolo desconhecido
+	exception UnknownSymbol {
+		string symbol;
+	};
+	
+	// O tipo StockSymbol é usado para representar os
+	// identificadores das ações
+	typedef string StockSymbol;
+	
+	// Um StockSymbolList é uma sequência de StockSymbols.
+	typedef sequence<StockSymbol> StockSymbolList;
+
+	// O tipo StockInfo possui o nome e o
+    // respectivo valor de uma ação.
+    valuetype StockInfo {
+        public StockSymbol name;
+        public float value;
+
+        // Operação que formata o nome e o valor
+        string toString();
+    };
+
+    //Retorna uma sequencia de StockInfo
+    typedef sequence<StockInfo> StockInfoList;
+
+	// A interface StockServer é a interface que fornece
+	// as informações sobre as ações do mercado.
+	interface StockServer {
+		// getStockValue() retorna o valor de uma determinada
+		// ação identificada por um StockSymbol fornecido como
+		// parâmetro de entrada.
+		// Se o StockSymbol dado for desconhecido, a exceção
+		// UnknownSymbol deve ser lançada.
+		float getStockValue(in StockSymbol symbol) raises (UnknownSymbol);
+		
+		// getStockSymbols() retorna uma sequência com todos os
+		// StockSymbols conhecidos pelo servidor do mercado de ações.
+		StockSymbolList getStockSymbols();
+
+		// getStockInfoList() retorna uma sequência com todos
+		// StockInfo conhecidos pelo servidor do mercado de ações
+		StockInfoList getStockInfoList();
+	};
+
+	// A interface StockExchange é a interface que permite
+    // a compra de ações.
+    interface StockExchange {
+     // Simula a venda de uma ação.
+     // Se o StockSymbol for conhecido, após a compra o
+     // valor dessa ação é aumentado em 10%, todas as
+     // impressoras conhecidas são notificadas e true é
+     // retornado. Se o StockSymbol dado for desconhecido,
+     // a exceção UnknownSymbol é lançada. Se houver
+     // qualquer outro erro relacionado à venda da ação,
+     // é retornado false. Erros relacionados à
+     // comunicação com impressoras podem ser simplesmente
+     // impressos em tela e true deve ser retornado.
+     boolean buyStock(in StockSymbol symbol) raises
+    (UnknownSymbol);
+     // Registra a existência de uma impressora,
+     // conectando-a ao StockSeller.
+     boolean connectPrinter(in ExchangePrinter printer);
+    };
+
+    // A interface ExchangePrinter é a interface que
+    // representa uma impressora de negociações de ações.
+    interface ExchangePrinter {
+     // Imprime que houve uma negociação da ação indicada.
+     // A saída utilizada para impressão não é
+     // especificada. Exemplos de saídas: tela, arquivo.
+     void print(in StockSymbol symbol);
+    };
+};
