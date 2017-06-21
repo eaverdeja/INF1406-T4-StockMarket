@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<project name="StockClient">
+
+	<target name="init" description="Inicia as propriedades">
+		<property name="src.dir" location="src" description="Codigo fonte" />
+		<property name="build.dir" location="bin" description="Codigo binario" />
+		<property name="idl.dir" location="idl" description="codigo fonte das idls" />
+		<property name="jacorblib.dir" location="lib" description="dependencias de bibliotecas" />
+		<property name="generated.dir" location="generated" description="geração das idls" />
+	</target>
+
+	<target name="clean" depends="init" description="Limpa os diretorios criados">
+		<delete dir="${build.dir}" />
+		<delete dir="${generated.dir}"/>
+	</target>
+	
+	<target name="idl" depends="clean" description="Compila idls">
+		<taskdef name="jacidl" classname="org.jacorb.idl.JacIDL">
+		<classpath>
+		<pathelement location="${jacorblib.dir}/idl.jar"/>
+		</classpath>
+		</taskdef>
+		<jacidl destdir="${generated.dir}" srcdir="${idl.dir}"/>
+	</target>
+	
+	<target name="javac" depends="idl" description="Compila codigo java">
+		<mkdir dir="${build.dir}" />
+	<javac destdir="${build.dir}" encoding="UTF-8">
+		<compilerarg value="-Xbootclasspath/p:${jacorblib.dir}/jacorb-3.8.jar"/>
+		<src path ="${generated.dir}" />
+		<src path ="${src.dir}" />
+		<classpath>
+			<pathelement location="${jacorblib.dir}/jacorb-3.8.jar"/>
+		</classpath>
+	</javac>	
+	</target>
+</project>

@@ -1,0 +1,50 @@
+// StockMarket.idl
+// O módulo StockMarket consiste das definições
+// úteis para desenvolvimento de aplicações
+// que lidam com mercado de ações.
+module StockMarket {
+	
+	// Exceção para definir o uso de um símbolo desconhecido
+	exception UnknownSymbol {
+		string symbol;
+	};
+	
+	// O tipo StockSymbol é usado para representar os
+	// identificadores das ações
+	typedef string StockSymbol;
+	
+	// Um StockSymbolList é uma sequência de StockSymbols.
+	typedef sequence<StockSymbol> StockSymbolList;
+
+	// O tipo StockInfo possui o nome e o
+    // respectivo valor de uma ação.
+    valuetype StockInfo {
+        public StockSymbol name;
+        public float value;
+
+        // Operação que formata o nome e o valor
+        string toString();
+    };
+
+    //Retorna uma sequencia de StockInfo
+    typedef sequence<StockInfo> StockInfoList;
+
+	// A interface StockServer é a interface que fornece
+	// as informações sobre as ações do mercado.
+	interface StockServer {
+		// getStockValue() retorna o valor de uma determinada
+		// ação identificada por um StockSymbol fornecido como
+		// parâmetro de entrada.
+		// Se o StockSymbol dado for desconhecido, a exceção
+		// UnknownSymbol deve ser lançada.
+		float getStockValue(in StockSymbol symbol) raises (UnknownSymbol);
+		
+		// getStockSymbols() retorna uma sequência com todos os
+		// StockSymbols conhecidos pelo servidor do mercado de ações.
+		StockSymbolList getStockSymbols();
+
+		// getStockInfoList() retorna uma sequência com todos
+		// StockInfo conhecidos pelo servidor do mercado de ações
+		StockInfoList getStockInfoList();
+	};
+};

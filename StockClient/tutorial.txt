@@ -1,0 +1,6 @@
+botão direito no projeto (para cada projeto)
+-> Build Path -> Libraries 
+	-> inclui jar jacorbs
+	-> aba order&export -> JRE no "bottom"
+
+-Xbootclasspath="path" coloca biblioteca  como prioridade
