@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<project name="StockClient">
+<project name="StockLogger">
 
 	<target name="init" description="Inicia as propriedades">
 		<property name="src.dir" location="src" description="Codigo fonte" />
-		<property name="build.dir" location="bin" description="Codigo binario" />
+		<property name="build.dir" location="out" description="Codigo binario" />
 		<property name="idl.dir" location="idl" description="codigo fonte das idls" />
 		<property name="jacorblib.dir" location="lib" description="dependencias de bibliotecas" />
 		<property name="generated.dir" location="generated" description="geração das idls" />

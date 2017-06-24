@@ -48,32 +48,34 @@ module StockMarket {
 		StockInfoList getStockInfoList();
 	};
 
-	// A interface StockExchange é a interface que permite
-    // a compra de ações.
-    interface StockExchange {
-     // Simula a venda de uma ação.
-     // Se o StockSymbol for conhecido, após a compra o
-     // valor dessa ação é aumentado em 10%, todas as
-     // impressoras conhecidas são notificadas e true é
-     // retornado. Se o StockSymbol dado for desconhecido,
-     // a exceção UnknownSymbol é lançada. Se houver
-     // qualquer outro erro relacionado à venda da ação,
-     // é retornado false. Erros relacionados à
-     // comunicação com impressoras podem ser simplesmente
-     // impressos em tela e true deve ser retornado.
-     boolean buyStock(in StockSymbol symbol) raises
-    (UnknownSymbol);
-     // Registra a existência de uma impressora,
-     // conectando-a ao StockSeller.
-     boolean connectPrinter(in ExchangePrinter printer);
-    };
-
     // A interface ExchangePrinter é a interface que
     // representa uma impressora de negociações de ações.
     interface ExchangePrinter {
-     // Imprime que houve uma negociação da ação indicada.
-     // A saída utilizada para impressão não é
-     // especificada. Exemplos de saídas: tela, arquivo.
-     void print(in StockSymbol symbol);
+        // Imprime que houve uma negociação da ação indicada.
+        // A saída utilizada para impressão não é
+        // especificada. Exemplos de saídas: tela, arquivo.
+        void print(in StockSymbol symbol);
     };
+
+    // A interface StockExchange é a interface que permite
+    // a compra de ações.
+    interface StockExchange {
+        // Simula a venda de uma ação.
+        // Se o StockSymbol for conhecido, após a compra o
+        // valor dessa ação é aumentado em 10%, todas as
+        // impressoras conhecidas são notificadas e true é
+        // retornado. Se o StockSymbol dado for desconhecido,
+        // a exceção UnknownSymbol é lançada. Se houver
+        // qualquer outro erro relacionado à venda da ação,
+        // é retornado false. Erros relacionados à
+        // comunicação com impressoras podem ser simplesmente
+        // impressos em tela e true deve ser retornado.
+        boolean buyStock(in StockSymbol symbol) raises
+        (UnknownSymbol);
+        // Registra a existência de uma impressora,
+        // conectando-a ao StockSeller.
+        boolean connectPrinter(in ExchangePrinter printer);
+    };
+
+
 };
