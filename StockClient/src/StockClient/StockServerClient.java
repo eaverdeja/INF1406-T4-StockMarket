@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.omg.CORBA.COMM_FAILURE;
@@ -13,50 +15,63 @@ import org.omg.CORBA.ORB;
 import org.omg.CORBA.TRANSIENT;
 
 public class StockServerClient {
-	private StockServer myStock;
+	private StockServer stockServer;
+	private StockExchange stockExchange;
 
-	public StockServerClient(StockServer stockServer) {
-		this.myStock = stockServer;
+	public StockServerClient(StockServer stockServer,StockExchange stockExchange) {
+		this.stockServer = stockServer;
+		this.stockExchange = stockExchange;
 	}
 
 	public void run() {
 		try {
-			String[] stockSymbols = myStock.getStockSymbols();
-
-			//valuetype
-			StockInfo[] stockInfoList = myStock.getStockInfoList();
+			String[] stockSymbols = stockServer.getStockSymbols();
 
 			System.out.println("Símbolos recuperados!");
 			for (int i = 0; i < stockSymbols.length; i++) {
-				System.out.println(stockSymbols[i] + " : " + myStock.getStockValue(stockSymbols[i]));
+				System.out.println(stockSymbols[i] + " : " + stockServer.getStockValue(stockSymbols[i]));
 			}
 
-			System.out.println("[ValueType] Símbolos recuperados!");
-			for (int i = 0; i < stockInfoList.length; i++) {
-				System.out.println(stockInfoList[i]._toString());
+			for(int i = 0; i < stockSymbols.length; i++){
+				stockExchange.buyStock(stockSymbols[i]);
 			}
+
+			//valuetype
+			StockInfo[] stockInfoList = stockServer.getStockInfoList();
+			for(StockInfo si : stockInfoList){
+				System.out.println(si._toString());
+			}
+
 		} catch (UnknownSymbol unknownSymbol) {
 			unknownSymbol.printStackTrace();
 		}
 	}
 
 	public static void main(String[] args) {
-		
+
+		Path iorDir = Paths.get(System.getProperty("user.dir").replaceFirst("StockClient","StockSeller"));
 		Properties orbProps = new Properties();
-		
 		orbProps.setProperty("org.omg.CORBA.ORBClass","org.jacorb.orb.ORB");
 		orbProps.setProperty("org.omg.CORBA.ORBSingletonClass", "org.jacorb.orb.ORBSingleton");
 		ORB orb = ORB.init(args, orbProps);
 
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));
-			String ior = reader.readLine();
+			//Recuperamos a referencia para o objeto StockServer do StockServer.ior
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(iorDir.toString().concat("\\StockServer.ior"))));
+			String iorServer = reader.readLine();
+			org.omg.CORBA.Object objStockServer = orb.string_to_object(iorServer);
+			StockServer server = StockServerHelper.narrow(objStockServer);
 
-			org.omg.CORBA.Object obj = orb.string_to_object(ior);
-			StockServer server = StockServerHelper.narrow(obj);
+			//Recuperamos a referencia para o objeto StockExchange do StockExchange.ior
+			reader = new BufferedReader(new InputStreamReader(new FileInputStream(iorDir.toString().concat("\\StockExchange.ior"))));
+			String iorExchange = reader.readLine();
+			org.omg.CORBA.Object objStockExchange = orb.string_to_object(iorExchange);
+			StockExchange exchange = StockExchangeHelper.narrow(objStockExchange);
 
-			StockServerClient stockClient = new StockServerClient(server);
+			//Iniciamos o cliente
+			StockServerClient stockClient = new StockServerClient(server,exchange);
 
+			//
 			orb.register_value_factory(StockInfoHelper.id(),new StockInfoFactory());
 
 			stockClient.run();

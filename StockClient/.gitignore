@@ -1,4 +1,5 @@
 generated
 .idea
 out
-StockSeller.ior
+StockServer.ior
+StockExchange.ior
