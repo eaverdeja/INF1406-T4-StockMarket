@@ -1,8 +1,6 @@
 package StockSeller;
 
-import StockMarket.StockExchange;
 import StockMarket.StockExchangePOATie;
-import StockMarket.StockServer;
 import StockMarket.StockServerPOATie;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;

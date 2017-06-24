@@ -7,7 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.function.Consumer;
 
 /**
  * Created by Yang on 24/06/2017.
@@ -45,8 +44,10 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
 
         for(int i = 0; i < stockInfoList.size(); i++){
             if(stockInfoList.get(i).name.equals(symbol)){
-                stockInfoList.get(i).value = stockInfoList.get(i).value + (stockInfoList.get(i).value * 0.1F);
-                return true;
+                synchronized (mutex) {
+                    stockInfoList.get(i).value = stockInfoList.get(i).value + (stockInfoList.get(i).value * 0.1F);
+                    return true;
+                }
             }
         }
 
