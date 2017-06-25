@@ -2,3 +2,5 @@ generated
 .idea
 out
 StockLogger.ior
+DisplayExchangePrinter.ior
+FileExchangePrinter.ior
