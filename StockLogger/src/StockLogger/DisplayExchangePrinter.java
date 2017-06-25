@@ -1,5 +1,6 @@
 package StockLogger;
 
+import StockMarket.ExchangePrinter;
 import StockMarket.ExchangePrinterOperations;
 
 /**
@@ -8,6 +9,7 @@ import StockMarket.ExchangePrinterOperations;
 public class DisplayExchangePrinter implements ExchangePrinterOperations {
     @Override
     public void print(String symbol) {
-
+        System.out.println(symbol);
+        return;
     }
 }

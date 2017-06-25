@@ -1,11 +1,13 @@
 package StockSeller;
 
 import StockMarket.*;
+import org.omg.CORBA.COMM_FAILURE;
+import org.omg.CORBA.ORB;
+import org.omg.CORBA.TRANSIENT;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 /**
@@ -15,9 +17,13 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
 
     private final Object mutex = new Object();
     private ArrayList<StockInfo> stockInfoList;
+    private ArrayList<ExchangePrinter> exchangePrinterList;
+    private static ORB orb;
 
-    public StockSellerTieImpl(){
+    public StockSellerTieImpl(ORB orb) {
         stockInfoList = new ArrayList<StockInfo>();
+        exchangePrinterList = new ArrayList<ExchangePrinter>();
+        StockSellerTieImpl.orb = orb;
         try {
             BufferedReader stocksFile = new BufferedReader(new FileReader("StocksFile"));
             String line;
@@ -39,13 +45,16 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
 
     @Override
     public boolean buyStock(String symbol) throws UnknownSymbol {
-        //TODO notificar impressoras conhecidas;
-        //TODO tratar erros de comunicação imprimindo na tela
-
         for(int i = 0; i < stockInfoList.size(); i++){
             if(stockInfoList.get(i).name.equals(symbol)){
                 synchronized (mutex) {
                     stockInfoList.get(i).value = stockInfoList.get(i).value + (stockInfoList.get(i).value * 0.1F);
+
+                    //TODO notificar impressoras conhecidas;
+                    //TODO tratar erros de comunicação imprimindo na tela
+                    for(int j = 0; j < exchangePrinterList.size(); j++) {
+                        exchangePrinterList.get(j).print(String.valueOf(stockInfoList.get(i).value));
+                    }
                     return true;
                 }
             }
@@ -58,8 +67,10 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
 
     @Override
     public boolean connectPrinter(ExchangePrinter printer) {
-        //TODO registrar existencia de uma impressora
-        return false;
+        //Registramos a existencia de uma impressora
+        this.exchangePrinterList.add(printer);
+
+        return true;
     }
 
     @Override
@@ -93,5 +104,29 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
             i++;
         }
         return stocks;
+    }
+
+    private static ExchangePrinter getPrinter() {
+        //Buscamos as impressoras
+        Path iorDir = Paths.get(System.getProperty("user.dir").replaceFirst("StockSeller","StockLogger"));
+        ExchangePrinter printer = null;
+        try {
+            //Recuperamos a referencia para o objeto StockLoger do StockLogger.ior
+            BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(iorDir.toString().concat("/StockLogger.ior"))));
+            String iorLogger = reader.readLine();
+            org.omg.CORBA.Object objStockLogger = orb.string_to_object(iorLogger);
+            printer = ExchangePrinterHelper.narrow(objStockLogger);
+        } catch (FileNotFoundException e) {
+            System.err.println("Arquivo inexistente:\n"+e);
+        } catch (IOException e) {
+            System.err.println("Erro ao ler arquivo:\n"+e);
+        } catch (TRANSIENT e) {
+            System.err.println("O serviço encontra-se indisponível");
+        } catch (COMM_FAILURE e) {
+            System.err.println("Falha de comunicação com o serviço");
+        }
+
+        return printer;
     }
 }

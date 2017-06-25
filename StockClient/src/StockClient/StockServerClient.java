@@ -33,7 +33,7 @@ public class StockServerClient {
 				System.out.println(stockSymbols[i] + " : " + stockServer.getStockValue(stockSymbols[i]));
 			}
 
-			System.out.print("Comprando Ações...");
+			System.out.println("Comprando Ações...");
 			for(int i = 0; i < stockSymbols.length; i++){
 				stockExchange.buyStock(stockSymbols[i]);
 			}
@@ -60,14 +60,14 @@ public class StockServerClient {
 		try {
 			//Recuperamos a referencia para o objeto StockServer do StockServer.ior
 			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					new FileInputStream(iorDir.toString().concat("\\StockServer.ior"))));
+					new FileInputStream(iorDir.toString().concat("/StockServer.ior"))));
 			String iorServer = reader.readLine();
 			org.omg.CORBA.Object objStockServer = orb.string_to_object(iorServer);
 			StockServer server = StockServerHelper.narrow(objStockServer);
 
 			//Recuperamos a referencia para o objeto StockExchange do StockExchange.ior
 			reader = new BufferedReader(new InputStreamReader(
-					new FileInputStream(iorDir.toString().concat("\\StockExchange.ior"))));
+					new FileInputStream(iorDir.toString().concat("/StockExchange.ior"))));
 			String iorExchange = reader.readLine();
 			org.omg.CORBA.Object objStockExchange = orb.string_to_object(iorExchange);
 			StockExchange exchange = StockExchangeHelper.narrow(objStockExchange);

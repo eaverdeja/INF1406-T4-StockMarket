@@ -1,7 +1,6 @@
 package StockSeller;
 
-import StockMarket.StockExchangePOATie;
-import StockMarket.StockServerPOATie;
+import StockMarket.*;
 import org.omg.CORBA.ORB;
 import org.omg.CORBA.ORBPackage.InvalidName;
 import org.omg.PortableServer.POA;
@@ -10,33 +9,38 @@ import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.Properties;
 
 /**
  * Created by Yang on 24/06/2017.
  */
 public class StockSellerMain {
+    private static ORB orb;
+    private static StockServerPOATie stockServer;
+    private static StockExchangePOATie stockExchange;
 
     public static void main(String[] args) {
-
+        //Configuramos o orb
         Properties orbProps = new Properties();
         orbProps.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
         orbProps.setProperty("org.omg.CORBA.ORBSingletonClass", "org.jacorb.orb.ORBSingleton");
-        ORB orb = ORB.init(args, orbProps);
+        orb = ORB.init(args, orbProps);
 
         //Geramos a instancia do Servant do StockSeller
-        StockSellerTieImpl stockSeller = new StockSellerTieImpl();
+        StockSellerTieImpl stockSeller = new StockSellerTieImpl(orb);
 
         //Como o servant precisa implementar duas interfaces de StockMarket
         // utilizamos a estratégia por Delegação. Abaixo criamos os objetos
         // POATie das respectivas interfaces.
-        StockServerPOATie stockServer = new StockServerPOATie(stockSeller);
-        StockExchangePOATie stockExchange =  new StockExchangePOATie(stockSeller);
+        stockServer = new StockServerPOATie(stockSeller);
+        stockExchange =  new StockExchangePOATie(stockSeller);
 
+        //Exportamos os objetos remotos e criamos o ior
+        exportServer();
+    }
+
+    private static void exportServer() {
         try {
             //Criamos o POA
             POA poa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
@@ -60,7 +64,6 @@ public class StockSellerMain {
             ps.println(orb.object_to_string(objStockExchange));
             ps.close();
 
-
             orb.run();
         } catch (InvalidName invalidName) {
             System.err.println(invalidName.getMessage());
@@ -77,7 +80,5 @@ public class StockSellerMain {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
-
     }
 }
