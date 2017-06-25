@@ -49,20 +49,29 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
             if(stockInfoList.get(i).name.equals(symbol)){
                 synchronized (mutex) {
                     stockInfoList.get(i).value = stockInfoList.get(i).value + (stockInfoList.get(i).value * 0.1F);
-
-                    //TODO notificar impressoras conhecidas;
-                    //TODO tratar erros de comunicação imprimindo na tela
-                    for(int j = 0; j < exchangePrinterList.size(); j++) {
-                        exchangePrinterList.get(j).print(String.valueOf(stockInfoList.get(i).value));
-                    }
-                    return true;
+                    activatePrinters(stockInfoList.get(i).name);
                 }
+                return true;
             }
         }
 
         //Lança exceção caso simbolo seja desconhecido
         //retorno de false é inalcançavel.
         throw new UnknownSymbol();
+    }
+
+    private void activatePrinters(String stockSymbol) {
+        //TODO tratar erros de comunicação imprimindo na tela
+        for(int j = 0; j < exchangePrinterList.size(); j++) {
+            try {
+                exchangePrinterList.get(j).print(stockSymbol);
+            } catch (TRANSIENT e) {
+                System.err.println("O serviço encontra-se indisponível");
+            } catch (COMM_FAILURE e) {
+                System.err.println("Falha de comunicação com o serviço");
+            }
+        }
+
     }
 
     @Override
