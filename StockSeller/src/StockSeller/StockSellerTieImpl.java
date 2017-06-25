@@ -19,6 +19,7 @@ import java.util.Map;
 public class StockSellerTieImpl implements StockServerOperations,StockExchangeOperations {
 
     private final Object mutex = new Object();
+    private final Object printerMutex = new Object();
     private ArrayList<StockInfo> stockInfoList;
     private HashMap<ExchangePrinter, Integer> exchangePrinters;
     private static ORB orb;
@@ -79,14 +80,17 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
                 //Incrementamos o contador de tentativas
                 exchangePrinters.put(printer, entry.getValue() + 1);
                 //Após 3 tentativas, removemos a impressora da lista
-                synchronized (mutex) {
-                    if(entry.getValue() >= 3) {
+                synchronized (printerMutex) {
+                    System.out.println(entry.getValue());
+                    if(entry.getValue() >= 2) {
                         iter.remove();
                     }
                 }
             } catch (COMM_FAILURE e) {
                 System.err.println("Falha de comunicação com o serviço");
-                exchangePrinters.remove(printer);
+                synchronized (printerMutex) {
+                    iter.remove();
+                }
                 System.err.println("Impressora com falha de comunicação removida");
             }
         }
@@ -95,7 +99,9 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
     @Override
     public boolean connectPrinter(ExchangePrinter printer) {
         //Registramos a existencia de uma impressora
-        this.exchangePrinters.put(printer, 0);
+        synchronized (printerMutex) {
+            this.exchangePrinters.put(printer, 0);
+        }
 
         return true;
     }
