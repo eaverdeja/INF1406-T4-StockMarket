@@ -20,8 +20,8 @@ import java.util.Properties;
 public class StockLoggerClient {
     private static ORB orb;
     private static StockExchange exchange ;
-    private static ExchangePrinterPOATie displayPrinter;
-    private static ExchangePrinterPOATie filePrinter;
+    private static DisplayExchangePrinter displayPrinter;
+    private static FileExchangePrinter filePrinter;
 
     public static void main(String[] args) {
 
@@ -30,9 +30,6 @@ public class StockLoggerClient {
         orbProps.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
         orbProps.setProperty("org.omg.CORBA.ORBSingletonClass", "org.jacorb.orb.ORBSingleton");
         orb = ORB.init(args, orbProps);
-
-        displayPrinter = new ExchangePrinterPOATie(new DisplayExchangePrinter());
-        filePrinter = new ExchangePrinterPOATie(new FileExchangePrinter());
 
         try {
             //Recuperamos a referencia para o objeto StockExchange do StockExchange.ior
@@ -59,18 +56,30 @@ public class StockLoggerClient {
             POA poa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
             poa.the_POAManager().activate();
 
-            //Exportamos o servant de StockLogger
+
+            displayPrinter = new DisplayExchangePrinter();
+            filePrinter = new FileExchangePrinter();
+
             org.omg.CORBA.Object objDisplayPrinter = poa.servant_to_reference(displayPrinter);
             org.omg.CORBA.Object objFilePrinter = poa.servant_to_reference(filePrinter);
-            //Conectamos as impressoras ao StockExchange
-            exchange.connectPrinter((ExchangePrinter)objDisplayPrinter);
-            //exchange.connectPrinter((ExchangePrinter)objFilePrinter);
-            //Criamos o arquivo IOR de StockLogger
+
+            //Criamos o arquivo IOR de Display e File ExchangePrinters
             PrintWriter ps = new PrintWriter(new FileOutputStream(
-                    new File("StockLogger.ior")
+                    new File("DisplayExchangePrinter.ior")
             ));
             ps.println(orb.object_to_string(objDisplayPrinter));
             ps.close();
+
+            ps = new PrintWriter(new FileOutputStream(
+                    new File("FileExchangePrinter.ior")
+            ));
+            ps.println(orb.object_to_string(objFilePrinter));
+            ps.close();
+
+            exchange.connectPrinter( ExchangePrinterHelper.narrow(objDisplayPrinter));
+            exchange.connectPrinter( ExchangePrinterHelper.narrow(objFilePrinter));
+
+            orb.run();
 
         } catch (InvalidName invalidName) {
             System.err.println(invalidName.getMessage());
