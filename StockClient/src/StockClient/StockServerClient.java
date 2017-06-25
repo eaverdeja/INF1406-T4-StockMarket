@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.Scanner;
 
 import org.omg.CORBA.COMM_FAILURE;
 import org.omg.CORBA.ORB;
@@ -23,30 +24,43 @@ public class StockServerClient {
 		this.stockExchange = stockExchange;
 	}
 
+	private void buyStock(){
+
+	    System.out.println("Ações disponiveis:");
+
+        StockInfo[] stockInfoList = stockServer.getStockInfoList();
+        System.out.println("Numero | Ação | Valor");
+        int i = 0;
+        for(StockInfo si : stockInfoList){
+            System.out.println(i+" | "+stockInfoList[i].name+" | "+stockInfoList[i].value);
+            i++;
+        }
+        int symbolNum;
+        do {
+            System.out.print("Digite o número de uma das ações acima que deseja comprar: ");
+            Scanner scanner = new Scanner(System.in);
+            symbolNum = scanner.nextInt();
+        }while(symbolNum < 0 || symbolNum > (stockInfoList.length-1));
+        try {
+            stockExchange.buyStock(stockInfoList[symbolNum].name);
+            System.out.println("Valor atualizado da ação: "+stockInfoList[symbolNum].name+": "
+                +stockServer.getStockValue(stockInfoList[symbolNum].name));
+        } catch (UnknownSymbol unknownSymbol) {
+            System.err.println("Simbolo da Ação desconhecido");
+        }
+
+    }
+
+
 	public void run() {
-		try {
-			System.out.println("Verificando ações disponíveis...");
-			String[] stockSymbols = stockServer.getStockSymbols();
-
-			System.out.println("[StockSymbols]Símbolos recuperados!");
-			for (int i = 0; i < stockSymbols.length; i++) {
-				System.out.println(stockSymbols[i] + " : " + stockServer.getStockValue(stockSymbols[i]));
-			}
-
-			System.out.println("Comprando Ações...");
-			for(int i = 0; i < stockSymbols.length; i++){
-				stockExchange.buyStock(stockSymbols[i]);
-			}
-
-			System.out.println("[ValueType] Verificando ações atualizadas");
-			StockInfo[] stockInfoList = stockServer.getStockInfoList();
-			for(StockInfo si : stockInfoList){
-				System.out.println(si._toString());
-			}
-
-		} catch (UnknownSymbol unknownSymbol) {
-			unknownSymbol.printStackTrace();
-		}
+	    int opt;
+	    do{
+	        buyStock();
+	        System.out.print("Digite '0' (zero) para sair");
+            Scanner scanner = new Scanner(System.in);
+            opt = scanner.nextInt();
+        } while (opt != 0);
+	    System.out.println("Terminando StockClient...");
 	}
 
 	public static void main(String[] args) {
