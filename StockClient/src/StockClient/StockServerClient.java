@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.InputMismatchException;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -24,23 +25,35 @@ public class StockServerClient {
 		this.stockExchange = stockExchange;
 	}
 
-	private void buyStock(){
-
-	    System.out.println("Ações disponiveis:");
+	private boolean buyStock(){
 
         StockInfo[] stockInfoList = stockServer.getStockInfoList();
-        System.out.println("Numero | Ação | Valor");
+		System.out.println("--------------");
+		System.out.println("Ações disponiveis:");
+		System.out.println("Numero | Ação | Valor");
         int i = 0;
         for(StockInfo si : stockInfoList){
             System.out.println(i+" | "+stockInfoList[i].name+" | "+stockInfoList[i].value);
             i++;
         }
+
         int symbolNum;
-        do {
-            System.out.print("Digite o número de uma das ações acima que deseja comprar: ");
+		do {
+            System.out.println("Digite o número de uma das ações acima que deseja comprar: ");
             Scanner scanner = new Scanner(System.in);
-            symbolNum = scanner.nextInt();
-        }while(symbolNum < 0 || symbolNum > (stockInfoList.length-1));
+
+			symbolNum = -1;
+            try {
+            	if(scanner.hasNextInt()) {
+					symbolNum = scanner.nextInt();
+				} else if(scanner.hasNext("exit")) {
+            		return false;
+				}
+			} catch (InputMismatchException inputMismatch) {
+				System.err.println("Comando desconhecido! " + inputMismatch.getCause());
+			}
+        } while( symbolNum > (stockInfoList.length-1) || symbolNum == -1);
+
         try {
             stockExchange.buyStock(stockInfoList[symbolNum].name);
             System.out.println("Valor atualizado da ação: "+stockInfoList[symbolNum].name+": "
@@ -49,17 +62,20 @@ public class StockServerClient {
             System.err.println("Simbolo da Ação desconhecido");
         }
 
+        return true;
     }
 
 
 	public void run() {
-	    int opt;
+	    String opt = null;
 	    do{
-	        buyStock();
-	        System.out.print("Digite '0' (zero) para sair");
+	        if(!buyStock()) {
+	        	break;
+			}
+	        System.out.print("Digite 'exit' para sair. Qualquer outro comando imprimirá a lista de ações novamente.");
             Scanner scanner = new Scanner(System.in);
-            opt = scanner.nextInt();
-        } while (opt != 0);
+            opt = scanner.next();
+        } while (!opt.equals("exit"));
 	    System.out.println("Terminando StockClient...");
 	}
 
