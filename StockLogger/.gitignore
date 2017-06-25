@@ -4,3 +4,4 @@ out
 StockLogger.ior
 DisplayExchangePrinter.ior
 FileExchangePrinter.ior
+StockLogging.txt
