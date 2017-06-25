@@ -9,6 +9,9 @@ import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by Yang on 24/06/2017.
@@ -17,12 +20,13 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
 
     private final Object mutex = new Object();
     private ArrayList<StockInfo> stockInfoList;
-    private ArrayList<ExchangePrinter> exchangePrinterList;
+    private HashMap<ExchangePrinter, Integer> exchangePrinters;
     private static ORB orb;
 
     public StockSellerTieImpl(ORB orb) {
         stockInfoList = new ArrayList<StockInfo>();
-        exchangePrinterList = new ArrayList<ExchangePrinter>();
+        exchangePrinters = new HashMap<>();
+
         StockSellerTieImpl.orb = orb;
         try {
             BufferedReader stocksFile = new BufferedReader(new FileReader("StocksFile"));
@@ -63,25 +67,35 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
     }
 
     private void activatePrinters(String stockSymbol) {
-        //TODO tratar erros de comunicação imprimindo na tela
-        for(int j = 0; j < exchangePrinterList.size(); j++) {
+        Iterator<Map.Entry<ExchangePrinter, Integer>> iter = exchangePrinters.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<ExchangePrinter, Integer> entry = iter.next();
+            ExchangePrinter printer = entry.getKey();
+
             try {
-                exchangePrinterList.get(j).print(stockSymbol);
+                printer.print(stockSymbol);
             } catch (TRANSIENT e) {
                 System.err.println("O serviço encontra-se indisponível");
+                //Incrementamos o contador de tentativas
+                exchangePrinters.put(printer, entry.getValue() + 1);
+                //Após 3 tentativas, removemos a impressora da lista
+                synchronized (mutex) {
+                    if(entry.getValue() >= 3) {
+                        iter.remove();
+                    }
+                }
             } catch (COMM_FAILURE e) {
                 System.err.println("Falha de comunicação com o serviço");
-                exchangePrinterList.remove(j);
+                exchangePrinters.remove(printer);
                 System.err.println("Impressora com falha de comunicação removida");
             }
         }
-
     }
 
     @Override
     public boolean connectPrinter(ExchangePrinter printer) {
         //Registramos a existencia de uma impressora
-        this.exchangePrinterList.add(printer);
+        this.exchangePrinters.put(printer, 0);
 
         return true;
     }
