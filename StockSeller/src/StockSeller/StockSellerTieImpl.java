@@ -79,10 +79,10 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
                 System.err.println("O serviço encontra-se indisponível");
                 //Incrementamos o contador de tentativas
                 exchangePrinters.put(printer, entry.getValue() + 1);
-                //Após 3 tentativas, removemos a impressora da lista
+                //Após uma tentativa, removemos a impressora da lista
                 System.err.println("Retries of "+ entry.getKey()+" : "+ entry.getValue());
-                if(entry.getValue() >= 2) {
-                    exchangePrinters.remove(entry);
+                if(entry.getValue() >= 1) {
+                    System.out.println(exchangePrinters.remove(printer));
                     System.err.println("Impressora com falha de comunicação removida");
                 }
             } catch (COMM_FAILURE e1) {
