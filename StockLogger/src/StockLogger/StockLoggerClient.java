@@ -44,9 +44,11 @@ public class StockLoggerClient {
 
             orb.run();
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.err.println("[FileNotFoundException - exportServer]: "+e.getMessage());
+            System.exit(1);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("[IOException - exportServer]: "+e.getMessage());
+            System.exit(1);
         }
     }
 
@@ -82,19 +84,20 @@ public class StockLoggerClient {
             orb.run();
 
         } catch (InvalidName invalidName) {
-            System.err.println(invalidName.getMessage());
-            invalidName.printStackTrace();
+            System.err.println("[InvalidName - exportServer]: "+invalidName.getMessage());
+            System.exit(1);
         } catch (ServantNotActive servantNotActive) {
-            System.err.println(servantNotActive.getMessage());
-            servantNotActive.printStackTrace();
+            System.err.println("[ServantNotActive - exportServer]: "+ servantNotActive.getMessage());
+            System.exit(1);
         } catch (WrongPolicy wrongPolicy) {
-            System.err.println(wrongPolicy.getMessage());
-            wrongPolicy.printStackTrace();
+            System.err.println("[WrongPolicy - exportServer]: "+wrongPolicy.getMessage());
+            System.exit(1);
         } catch (AdapterInactive adapterInactive) {
-            System.err.println(adapterInactive.getMessage());
-            adapterInactive.printStackTrace();
+            System.err.println("[WrongPolicy - exportServer]: "+adapterInactive.getMessage());
+            System.exit(1);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.err.println("[FileNotFoundException - exportServer]: "+e.getMessage());
+            System.exit(1);
         }
     }
 }

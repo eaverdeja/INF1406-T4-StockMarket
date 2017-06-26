@@ -22,6 +22,7 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
     private final Object printerMutex = new Object();
     private ArrayList<StockInfo> stockInfoList;
     private ConcurrentHashMap<ExchangePrinter, Integer> exchangePrinters;
+    private Iterator<Map.Entry<ExchangePrinter, Integer>> iterator;
     private static ORB orb;
 
     public StockSellerTieImpl(ORB orb) {
@@ -54,7 +55,7 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
             if(stockInfoList.get(i).name.equals(symbol)){
                 synchronized (mutex) {
                     stockInfoList.get(i).value = stockInfoList.get(i).value + (stockInfoList.get(i).value * 0.1F);
-
+                    //notifica as impressoras
                     activatePrinters(stockInfoList.get(i).name);
                 }
                 return true;
@@ -66,7 +67,7 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
     }
 
     private void activatePrinters(String stockSymbol) {
-        Iterator<Map.Entry<ExchangePrinter, Integer>> iterator = exchangePrinters.entrySet().iterator();
+
         while (iterator.hasNext()){
             Map.Entry<ExchangePrinter, Integer> entry = iterator.next();
             ExchangePrinter printer = entry.getKey();
@@ -76,19 +77,19 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
                     printer.print(stockSymbol);
                 }
             } catch (TRANSIENT e) {
-                System.err.println("O serviço encontra-se indisponível");
+                System.err.println("[TRANSIENT - activatePrinters]: O serviço encontra-se indisponível");
                 //Incrementamos o contador de tentativas
                 exchangePrinters.put(printer, entry.getValue() + 1);
                 //Após uma tentativa, removemos a impressora da lista
-                System.err.println("Retries of "+ entry.getKey()+" : "+ entry.getValue());
+                System.err.println("[TRANSIENT - activatePrinters]: "+ entry.getValue()+" Retries of "+ entry.getKey());
                 if(entry.getValue() >= 1) {
                     System.out.println(exchangePrinters.remove(printer));
-                    System.err.println("Impressora com falha de comunicação removida");
+                    System.err.println("[TRANSIENT - activatePrinters] Impressora com falha de comunicação removida");
                 }
             } catch (COMM_FAILURE e1) {
-                System.err.println("Falha de comunicação com o serviço");
-                exchangePrinters.remove(entry);
-                System.err.println("Impressora com falha de comunicação removida");
+                System.err.println("[COMM_FAILURE - activatePrinters] Falha de comunicação com o serviço");
+                exchangePrinters.remove(printer);
+                System.err.println("[COMM_FAILURE - activatePrinters] Impressora com falha de comunicação removida");
             }
         }
     }
@@ -96,9 +97,12 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
     @Override
     public boolean connectPrinter(ExchangePrinter printer) {
         //Registramos a existencia de uma impressora
-        this.exchangePrinters.put(printer, 0);
-        System.out.println("Nova ExchangePrinter cadastrada: "+printer);
-        return true;
+        synchronized (printerMutex) {
+            this.exchangePrinters.put(printer, 0);
+            iterator = exchangePrinters.entrySet().iterator();
+            System.out.println("Nova ExchangePrinter cadastrada: " + printer);
+            return true;
+        }
     }
 
     @Override
@@ -150,9 +154,9 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
         } catch (IOException e) {
             System.err.println("Erro ao ler arquivo:\n"+e);
         } catch (TRANSIENT e) {
-            System.err.println("O serviço encontra-se indisponível");
+            System.err.println("[TRANSIENT - getPrinter] O serviço encontra-se indisponível");
         } catch (COMM_FAILURE e) {
-            System.err.println("Falha de comunicação com o serviço");
+            System.err.println("[COMM_FAILURE - getPrinter] Falha de comunicação com o serviço");
         }
 
         return printer;

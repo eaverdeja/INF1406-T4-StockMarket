@@ -111,13 +111,16 @@ public class StockServerClient {
 			stockClient.run();
 
 		} catch (FileNotFoundException e) {
-			System.err.println("Arquivo inexistente:\n"+e);
+			System.err.println("[FileNotFoundException] Arquivo inexistente:\n"+e);
+			System.exit(1);
 		} catch (IOException e) {
-			System.err.println("Erro ao ler arquivo:\n"+e);
+			System.err.println("[IOException] Erro ao ler arquivo:\n"+e);
+			System.exit(1);
 		} catch (TRANSIENT e) {
-			System.err.println("O serviço encontra-se indisponível");
+			System.err.println("[TRANSIENT] O serviço encontra-se indisponível");
 		} catch (COMM_FAILURE e) {
-			System.err.println("Falha de comunicação com o serviço");
+			System.err.println("[COMM_FAILURE] Falha de comunicação com o serviço");
+			System.exit(1);
 		}
 
 	}

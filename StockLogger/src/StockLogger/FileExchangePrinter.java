@@ -28,7 +28,7 @@ public class FileExchangePrinter extends ExchangePrinterPOA {
                 bw.newLine();
                 bw.close();
             } catch (IOException e) {
-                System.err.println("Erro ao escrever no arquivo!");
+                System.err.println("[IOException] Erro ao escrever no arquivo!");
             }
         }
     }

@@ -66,19 +66,19 @@ public class StockSellerMain {
 
             orb.run();
         } catch (InvalidName invalidName) {
-            System.err.println(invalidName.getMessage());
-            invalidName.printStackTrace();
+            System.err.println("[InvalidName] "+invalidName.getMessage());
+            System.exit(1);
         } catch (ServantNotActive servantNotActive) {
-            System.err.println(servantNotActive.getMessage());
-            servantNotActive.printStackTrace();
+            System.err.println("[ServantNotActive] "+servantNotActive.getMessage());
+            System.exit(1);
         } catch (WrongPolicy wrongPolicy) {
-            System.err.println(wrongPolicy.getMessage());
-            wrongPolicy.printStackTrace();
+            System.err.println("[WrongPolicy] "+wrongPolicy.getMessage());
+            System.exit(1);
         } catch (AdapterInactive adapterInactive) {
-            System.err.println(adapterInactive.getMessage());
-            adapterInactive.printStackTrace();
+            System.err.println("[AdapterInactive] "+adapterInactive.getMessage());
+            System.exit(1);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            System.exit(1);
         }
     }
 }
