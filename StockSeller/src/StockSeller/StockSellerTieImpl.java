@@ -9,9 +9,9 @@ import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Yang on 24/06/2017.
@@ -21,12 +21,12 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
     private final Object mutex = new Object();
     private final Object printerMutex = new Object();
     private ArrayList<StockInfo> stockInfoList;
-    private HashMap<ExchangePrinter, Integer> exchangePrinters;
+    private ConcurrentHashMap<ExchangePrinter, Integer> exchangePrinters;
     private static ORB orb;
 
     public StockSellerTieImpl(ORB orb) {
         stockInfoList = new ArrayList<StockInfo>();
-        exchangePrinters = new HashMap<>();
+        exchangePrinters = new ConcurrentHashMap<>();
 
         StockSellerTieImpl.orb = orb;
         try {
@@ -60,37 +60,34 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
                 return true;
             }
         }
-
-
         //Lança exceção caso simbolo seja desconhecido
         //retorno de false é inalcançavel.
         throw new UnknownSymbol();
     }
 
     private void activatePrinters(String stockSymbol) {
-        Iterator<Map.Entry<ExchangePrinter, Integer>> iter = exchangePrinters.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry<ExchangePrinter, Integer> entry = iter.next();
+        Iterator<Map.Entry<ExchangePrinter, Integer>> iterator = exchangePrinters.entrySet().iterator();
+        while (iterator.hasNext()){
+            Map.Entry<ExchangePrinter, Integer> entry = iterator.next();
             ExchangePrinter printer = entry.getKey();
 
             try {
-                printer.print(stockSymbol);
+                synchronized (printerMutex) {
+                    printer.print(stockSymbol);
+                }
             } catch (TRANSIENT e) {
                 System.err.println("O serviço encontra-se indisponível");
                 //Incrementamos o contador de tentativas
                 exchangePrinters.put(printer, entry.getValue() + 1);
                 //Após 3 tentativas, removemos a impressora da lista
-                synchronized (printerMutex) {
-                    System.out.println(entry.getValue());
-                    if(entry.getValue() >= 2) {
-                        iter.remove();
-                    }
+                System.err.println("Retries of "+ entry.getKey()+" : "+ entry.getValue());
+                if(entry.getValue() >= 2) {
+                    exchangePrinters.remove(entry);
+                    System.err.println("Impressora com falha de comunicação removida");
                 }
-            } catch (COMM_FAILURE e) {
+            } catch (COMM_FAILURE e1) {
                 System.err.println("Falha de comunicação com o serviço");
-                synchronized (printerMutex) {
-                    iter.remove();
-                }
+                exchangePrinters.remove(entry);
                 System.err.println("Impressora com falha de comunicação removida");
             }
         }
@@ -99,10 +96,8 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
     @Override
     public boolean connectPrinter(ExchangePrinter printer) {
         //Registramos a existencia de uma impressora
-        synchronized (printerMutex) {
-            this.exchangePrinters.put(printer, 0);
-        }
-
+        this.exchangePrinters.put(printer, 0);
+        System.out.println("Nova ExchangePrinter cadastrada: "+printer);
         return true;
     }
 
