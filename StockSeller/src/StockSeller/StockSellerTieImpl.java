@@ -67,7 +67,7 @@ public class StockSellerTieImpl implements StockServerOperations,StockExchangeOp
     }
 
     private void activatePrinters(String stockSymbol) {
-
+        iterator = exchangePrinters.entrySet().iterator();
         while (iterator.hasNext()){
             Map.Entry<ExchangePrinter, Integer> entry = iterator.next();
             ExchangePrinter printer = entry.getKey();
